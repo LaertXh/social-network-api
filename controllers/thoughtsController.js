@@ -48,6 +48,26 @@ module.exports = {
       })
       .catch((err) => res.status(500).json(err));
   },
+  deleteThought(req, res) {
+    Thought.findOneAndDelete({ _id: req.params.thoughtId })
+      .then((deletedThought) => {
+        if (!deletedThought) {
+          return res.status(404).json({ message: "No thought with this ID." });
+        }
+        return User.findOneAndUpdate(
+          { username: deletedThought.username },
+          { $pull: { thoughts: req.params.thoughtId } },
+          { new: true }
+        );
+      })
+      .then((dbUserData) => {
+        if (!dbUserData) {
+          return res.status(404).json({ message: "No user with this ID." });
+        }
+        res.json({ message: "Thought successfully deleted." });
+      })
+      .catch((err) => res.status(500).json(err));
+  },
   addReaction(req, res) {
     const { reactionBody, username } = req.body;
 

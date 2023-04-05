@@ -13,10 +13,6 @@ module.exports = {
         path: "thoughts",
         select: "-__v",
       })
-      .populate({
-        path: "friends",
-        select: "-__v",
-      })
       .select("-__v")
       .then((user) =>
         !user
@@ -33,7 +29,7 @@ module.exports = {
   },
   updateUser(req, res) {
     User.findOneAndUpdate(
-      { _id: req.params.id },
+      { _id: req.params.userId },
       { $set: { email: req.body.email, username: req.body.username } },
       { new: true }
     )
@@ -49,18 +45,21 @@ module.exports = {
   },
   deleteUser(req, res) {
     User.findOneAndRemove({ _id: req.params.userId })
-      .then((user) =>
-        !user
-          ? res.status(404).json({ message: "No user with this id!" })
-          : Thought.findAndRemove({ username: user.username }).then((thought) =>
-              !thought
-                ? res.status(404).json({
-                    message:
-                      "User deleted but no thoughts existed for this user",
-                  })
-                : res.json({ message: "User and thoughts deleted" })
-            )
-      )
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({ message: "No user with this id!" });
+        }
+        return Thought.deleteMany({ username: user.username })
+          .then((thought) => {
+            if (!thought.deletedCount) {
+              return res.status(404).json({
+                message: "User deleted but no thoughts existed for this user",
+              });
+            }
+            return res.json({ message: "User and thoughts deleted" });
+          })
+          .catch((err) => res.status(500).json(err));
+      })
       .catch((err) => res.status(500).json(err));
   },
   addFriend(req, res) {

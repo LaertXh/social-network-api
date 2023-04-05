@@ -48,4 +48,44 @@ module.exports = {
       })
       .catch((err) => res.status(500).json(err));
   },
+  addReaction(req, res) {
+    const { reactionBody, username } = req.body;
+
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $push: { reactions: { reactionBody, username } } },
+      { new: true, runValidators: true }
+    )
+      .then((updatedThought) => {
+        if (!updatedThought) {
+          return res
+            .status(404)
+            .json({ message: "No thought found with this id!" });
+        }
+        res.json(updatedThought);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  },
+  removeReaction(req, res) {
+    Thought.findByIdAndUpdate(
+      { _id: req.params.thoughtId },
+      { $pull: { reactions: { reactionId: req.params.reactionId } } },
+      { new: true }
+    )
+      .then((updatedThought) => {
+        if (!updatedThought) {
+          return res
+            .status(404)
+            .json({ message: "No thought found with this id!" });
+        }
+        res.json(updatedThought);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  },
 };

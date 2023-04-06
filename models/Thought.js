@@ -29,6 +29,14 @@ const thoughtSchema = new Schema(
   }
 );
 
+function dateFormat(timestamp) {
+  const date = new Date(timestamp);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+}
+
 // Create a virtual called 'reactionCount' that retrieves the length of the 'reactions' array field
 thoughtSchema.virtual("reactionCount").get(function () {
   return this.reactions.length;
